@@ -1,0 +1,24 @@
+{
+    "seed":42,
+    "DATASET":{
+        "root": "data\\tiny-imagenet-200-copy\\train",
+        "train":"data\\train.pkl",
+        "val":"data\\val.pkl",
+        "test":"data\\test.pkl",
+        "numclasses":2,
+        "sameprob":0.5
+    },
+    "MODEL":{
+        "model":"simple",
+        "pretrained":null,
+        "distance":"cosine"
+    },
+    "TRAIN":{
+        "lossmargin":20.0,
+        "device":"cuda:0",
+        "numepochs":50,
+        "batchsize":64,
+        "numworkers":1,
+        "lr":0.0001
+    }
+}
