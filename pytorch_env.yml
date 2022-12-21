@@ -1,0 +1,16 @@
+name: MLenv
+channels:
+  - defaults
+dependencies:
+  - pandas
+  - numpy
+  - scipy
+  - pytorch
+  - torchaudio
+  - torchvision
+  - cudatoolkit=11.3
+  - matplotlib
+  - ipykernel
+  - scikit-learn
+  - notebook
+prefix: C:\Users\Emilija\.conda\envs\MLenv
