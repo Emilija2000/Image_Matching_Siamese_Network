@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
+import os
 import torch
 from torch.utils.data import Dataset, random_split
 from torchvision import datasets,transforms
@@ -14,7 +15,7 @@ def readDataFolder(root, numclasses=50):
     for i in range(len(dataset)):
         if dataset.targets[i]<numclasses:
             name = dataset.imgs[i][0]
-            if name.rsplit('\\',1)[-1][0]!='.':
+            if name.rsplit(os.sep,1)[-1][0]!='.':
                 idx.append(i)
     idx = np.array(idx)
     
@@ -63,12 +64,15 @@ class SiameseDataset(Dataset):
                     break
         
         # load images
-        img0 = Image.open(datapoint0[0])
-        img1 = Image.open(datapoint1[0])
+        img0 = Image.open(datapoint0[0]).convert('RGB') 
+        img1 = Image.open(datapoint1[0]).convert('RGB') 
         
         if self.transform is not None:
             img0 = self.transform(img0)
             img1 = self.transform(img1)
+        else:
+            img0 = transforms.ToTensor(img0)
+            img1 = transforms.ToTensor(img1)
             
         # label
         same = torch.from_numpy(np.array([1-same]))

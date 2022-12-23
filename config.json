@@ -5,13 +5,14 @@
         "train":"data\\train.pkl",
         "val":"data\\val.pkl",
         "test":"data\\test.pkl",
-        "numclasses":2,
+        "numclasses":50,
         "sameprob":0.5
     },
     "MODEL":{
-        "model":"simple",
+        "model":"resnet",
         "pretrained":null,
-        "distance":"cosine"
+        "distance":"euclidian",
+        "modelpath":"models\\resnet_state_dict_50cls.pkl"
     },
     "TRAIN":{
         "lossmargin":20.0,
@@ -19,6 +20,6 @@
         "numepochs":50,
         "batchsize":64,
         "numworkers":1,
-        "lr":0.0001
+        "lr":0.00005
     }
 }
