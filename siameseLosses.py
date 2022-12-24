@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-
 class ContrastiveLoss(nn.Module):
     """
     Contrastive loss function.
@@ -14,6 +13,6 @@ class ContrastiveLoss(nn.Module):
         self.margin = margin
 
     def forward(self, distance, label):
-        loss_contrastive = torch.mean((1-label) * torch.pow(distance, 2) +
-                                      (label) * torch.pow(torch.clamp(self.margin - distance, min=0.0), 2))
+        temp = torch.matmul((1-label).T*1.,torch.pow(distance, 2)) + torch.matmul((label).T*1., torch.pow(torch.clamp(self.margin - distance, min=0.0), 2))
+        loss_contrastive = temp/label.shape[0]
         return loss_contrastive
