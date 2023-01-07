@@ -6,20 +6,23 @@
         "val":"data\\val.pkl",
         "test":"data\\test.pkl",
         "numclasses":50,
-        "sameprob":0.5
+        "sameprob":0.5,
+        "im_size":32
     },
     "MODEL":{
-        "model":"resnet",
+        "model":"triplet",
+        "embsize":20,
+        "resnet_base":"state_dicts\\resnet18.pt",
         "pretrained":null,
         "distance":"euclidian",
-        "modelpath":"models\\resnet_state_dict_50cls.pkl"
+        "modelpath":"models\\mobilenet_state_dict_50cls.pkl"
     },
     "TRAIN":{
-        "lossmargin":20.0,
+        "lossmargin":2.0,
         "device":"cuda:0",
-        "numepochs":50,
-        "batchsize":64,
-        "numworkers":1,
+        "numepochs":20,
+        "batchsize":32,
+        "numworkers":4,
         "lr":0.00005
     }
 }

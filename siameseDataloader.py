@@ -42,6 +42,7 @@ class SiameseDataset(Dataset):
         
         self.imgs = np.array(dataset.imgs)[indices]   
         self.classes = np.array(dataset.targets)[indices]
+        
         self.transform = transform
         self.sameprob = sameprob
     
@@ -49,12 +50,13 @@ class SiameseDataset(Dataset):
         return len(self.classes)
     
     def __getitem__(self, index):
+        index = np.mod(index,len(self.classes))
         datapoint0 = self.imgs[index]
         
         same = np.random.random() < self.sameprob
         # loop until item of a class we need (same or not) is found
         while True:
-            index1 = np.random.randint(0,self.__len__())
+            index1 = np.random.randint(0,len(self.classes))
             datapoint1 = self.imgs[index1]        
             if same:
                 if datapoint0[1]==datapoint1[1]:
@@ -75,11 +77,110 @@ class SiameseDataset(Dataset):
             img1 = transforms.ToTensor(img1)
             
         # label
-        same = torch.from_numpy(np.array([1-same]))
+        same = torch.from_numpy(np.array([1-same]).astype(np.float32))
         
         return img0,img1,same
     
+    def getImageFromClass(self,cls):
+        indices = np.where(cls==self.classes)
+        num = len(indices[0])
+        i =  np.random.randint(0,num)
+        img = Image.open(self.imgs[indices[0][i]][0]).convert('RGB') 
+        return img,num
+        
+        
     
+class TripletDataset(Dataset):
+    def __init__(self,datasplit,transform=None):
+        dataset = datasplit.dataset
+        indices = datasplit.indices 
+        
+        self.imgs = np.array(dataset.imgs)[indices]   
+        self.classes = np.array(dataset.targets)[indices]
+        self.transform = transform
+    
+    def __len__(self):
+        return len(self.classes)
+    
+    def __getitem__(self, index):
+        datapoint0 = self.imgs[index]
+        
+        flag1=False 
+        flag2=False
+        # loop until item of a class we need (same or not) is found
+        while True:
+            index1 = np.random.randint(0,self.__len__())
+            datapoint_temp = self.imgs[index1]        
+            
+            if datapoint0[1]==datapoint_temp[1] and not(flag1):
+                datapoint1=datapoint_temp
+                flag1=True
+            elif datapoint0[1]!=datapoint_temp[1] and not(flag2):
+                datapoint2 = datapoint_temp
+                flag2=True
+            if flag1 and flag2:
+                break
+        
+        # load images
+        img0 = Image.open(datapoint0[0]).convert('RGB') 
+        img1 = Image.open(datapoint1[0]).convert('RGB') 
+        img2 = Image.open(datapoint2[0]).convert('RGB') 
+        
+        if self.transform is not None:
+            img0 = self.transform(img0)
+            img1 = self.transform(img1)
+            img2 = self.transform(img2)
+        else:
+            img0 = transforms.ToTensor(img0)
+            img1 = transforms.ToTensor(img1)
+            img2 = transforms.ToTensor(img2)
+            
+        return img0,img1,img2  
+    
+class MyImagenetDataset(Dataset):
+    def __init__(self,datasplit,transform=None):
+        dataset = datasplit.dataset
+        indices = datasplit.indices 
+        
+        self.imgs = np.array(dataset.imgs)[indices]   
+        self.classes = np.array(dataset.targets)[indices]
+        
+        self.transform = transform
+        if self.transform is None:
+            self.transform = transforms.ToTensor()
+    
+    def __len__(self):
+        return len(self.classes)
+    
+    def __getitem__(self, index):
+        datapoint = self.imgs[index]
+        label = torch.tensor(self.classes[index],dtype=torch.long)
+        img = Image.open(datapoint[0]).convert('RGB') 
+        img = self.transform(img)
+        return img, label
+    
+    def getImageFromClass(self,cls):
+        indices = np.where(cls==self.classes)
+        num = len(indices[0])
+        i =  np.random.randint(0,num)
+        img = Image.open(self.imgs[indices[0][i]][0]).convert('RGB') 
+        return img
+    
+class EmbeddingDataset(Dataset):
+    def __init__(self,path):
+        data,labels = torch.load(path)
+        
+        self.data = np.array(data)
+        self.labels = np.array(labels)
+        
+    def __len__(self):
+        return len(self.labels)
+    
+    def __getitem__(self, index):
+        d = torch.tensor(self.data[index],dtype=torch.float)
+        l = torch.tensor(self.labels[index],dtype=torch.float)
+        return d,l
+
 if __name__=='__main__':
     config = utils.load_config()
     
