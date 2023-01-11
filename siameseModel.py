@@ -149,3 +149,42 @@ class MobileNetTriplet(Siamese):
         
         return output1,output2,output3
     
+    def getEmb(self,input1,input2):
+        output1 = self.__forward_once(input1)
+        output2 = self.__forward_once(input2)
+        output = torch.concat((output1,output2),dim=1)
+        return output.detach().cpu()
+    
+class MobilenetBinary(nn.Module):
+    def __init__(self,pretrained=None,embsize=64):
+        super(MobilenetBinary, self).__init__()
+        
+        self.network = MobileNet(numclasses=embsize)
+        
+        self.classifier = nn.Sequential(
+            nn.Linear(2*embsize,64),
+            nn.ReLU(),
+            nn.Linear(64,1)
+        )
+        self.sigmoid = nn.Sigmoid()
+        
+        if pretrained!=None:
+            self.load_state_dict(torch.load(pretrained))
+        
+    def __forward_once(self, x):
+        output = self.network(x)
+        return output
+
+    def forward(self, input1, input2):
+        output1 = self.__forward_once(input1)
+        output2 = self.__forward_once(input2)
+        conc = torch.concat((output1,output2),dim=1)
+        out = self.classifier(conc)
+        out = self.sigmoid(out)
+        return out
+    
+    def getEmb(self,input1,input2):
+        output1 = self.__forward_once(input1)
+        output2 = self.__forward_once(input2)
+        output = torch.concat((output1,output2),dim=1)
+        return output.detach().cpu()

@@ -8,15 +8,23 @@ from torchvision import datasets,transforms
 
 import utilities as utils
 
-def readDataFolder(root, numclasses=50):
+def readDataFolder(root, numclasses=50, seen=True):
     dataset = datasets.ImageFolder(root)
     
     idx = []
-    for i in range(len(dataset)):
-        if dataset.targets[i]<numclasses:
-            name = dataset.imgs[i][0]
-            if name.rsplit(os.sep,1)[-1][0]!='.':
-                idx.append(i)
+    if seen:
+        for i in range(len(dataset)):
+            if dataset.targets[i]<numclasses:
+                name = dataset.imgs[i][0]
+                if name.rsplit(os.sep,1)[-1][0]!='.':
+                    idx.append(i)
+    else:
+        for i in range(len(dataset)):
+            if dataset.targets[i]>=numclasses:
+                name = dataset.imgs[i][0]
+                if name.rsplit(os.sep,1)[-1][0]!='.':
+                    idx.append(i)
+                    
     idx = np.array(idx)
     
     dataset.samples = np.array(dataset.samples)[idx].tolist()
@@ -36,13 +44,17 @@ def dataSplits(dataset, trainP=0.7, valP=0.2, testP=0.1,seed=42):
     return train_split,val_split,test_split    
         
 class SiameseDataset(Dataset):
-    def __init__(self,datasplit,transform=None,sameprob=0.5):
-        dataset = datasplit.dataset
-        indices = datasplit.indices 
-        
-        self.imgs = np.array(dataset.imgs)[indices]   
-        self.classes = np.array(dataset.targets)[indices]
-        
+    def __init__(self,datasplit,transform=None,sameprob=0.5,issplit=True):
+        if issplit:
+            dataset = datasplit.dataset
+            indices = datasplit.indices 
+            
+            self.imgs = np.array(dataset.imgs)[indices]   
+            self.classes = np.array(dataset.targets)[indices]
+        else:
+            self.imgs = np.array(datasplit.imgs)
+            self.classes = np.array(datasplit.targets)
+            
         self.transform = transform
         self.sameprob = sameprob
     
@@ -78,14 +90,13 @@ class SiameseDataset(Dataset):
             
         # label
         same = torch.from_numpy(np.array([1-same]).astype(np.float32))
-        
         return img0,img1,same
     
     def getImageFromClass(self,cls):
         indices = np.where(cls==self.classes)
         num = len(indices[0])
         i =  np.random.randint(0,num)
-        img = Image.open(self.imgs[indices[0][i]][0]).convert('RGB') 
+        img = np.array(Image.open(self.imgs[indices[0][i]][0]).convert('RGB'))
         return img,num
         
         
@@ -138,12 +149,16 @@ class TripletDataset(Dataset):
         return img0,img1,img2  
     
 class MyImagenetDataset(Dataset):
-    def __init__(self,datasplit,transform=None):
-        dataset = datasplit.dataset
-        indices = datasplit.indices 
-        
-        self.imgs = np.array(dataset.imgs)[indices]   
-        self.classes = np.array(dataset.targets)[indices]
+    def __init__(self,datasplit,transform=None,issplit=True):
+        if issplit:
+            dataset = datasplit.dataset
+            indices = datasplit.indices 
+            
+            self.imgs = np.array(dataset.imgs)[indices]   
+            self.classes = np.array(dataset.targets)[indices]
+        else:
+            self.imgs = np.array(datasplit.imgs)
+            self.classes = np.array(datasplit.targets)
         
         self.transform = transform
         if self.transform is None:
@@ -155,7 +170,7 @@ class MyImagenetDataset(Dataset):
     def __getitem__(self, index):
         datapoint = self.imgs[index]
         label = torch.tensor(self.classes[index],dtype=torch.long)
-        img = Image.open(datapoint[0]).convert('RGB') 
+        img = Image.open(datapoint[0]).convert('RGB')
         img = self.transform(img)
         return img, label
     
@@ -165,6 +180,10 @@ class MyImagenetDataset(Dataset):
         i =  np.random.randint(0,num)
         img = Image.open(self.imgs[indices[0][i]][0]).convert('RGB') 
         return img
+    
+    def getIndFromClass(self,cls):
+        indices = np.where(cls==self.classes)
+        return indices
     
 class EmbeddingDataset(Dataset):
     def __init__(self,path):

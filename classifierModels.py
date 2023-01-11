@@ -28,7 +28,7 @@ class SimpleNetwork(nn.Module):
         self.cnn = nn.Sequential(
             nn.Conv2d(3, 4, kernel_size=3),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(3, stride=2),
+            nn.MaxPool2d(3, stride=2),#
             nn.Conv2d(4, 8, kernel_size=3),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(3, stride=2),
@@ -37,6 +37,7 @@ class SimpleNetwork(nn.Module):
         )
         self.fc = nn.Sequential(
             nn.Linear(11*11*8, 64),
+            #nn.Linear(27*27*8,64),
             nn.ReLU(inplace=True),
             nn.Linear(64,64),
             nn.ReLU(inplace=True),
